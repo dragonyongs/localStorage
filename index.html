@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List - LocalStorage</title>
+    <style type="text/css">
+        .todo-done {
+            text-decoration-line: line-through;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <h2>LOCAL TAPAS</h2>
+        <p></p>
+        <ul class="plates">
+            <li>Loading Tapas...</li>
+        </ul>
+        <form class="add-items">
+            <input type="text" name="item" placeholder="Item Name" required>
+            <input type="submit" value="+ Add Item">
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        // HTML 요소 선택
+        const addItems = document.querySelector('.add-items');
+        const itemsList = document.querySelector('.plates');
+        const items = JSON.parse(localStorage.getItem("items")) || [];
+
+        // 항목 추가
+        function addItem(e) {
+            e.preventDefault();
+            const text = this.querySelector('[name=item]').value;
+
+            // 입력된 글자와 같은 항목 유무 체크
+            const checkItems = items.findIndex(e => e.text == text);
+
+            if (checkItems == -1) {
+                const item = {
+                    text,
+                    done: false
+                }
+                items.push(item);
+                localStorage.setItem("items", JSON.stringify(items));
+                populateList(items, itemsList);
+                this.reset();
+            } else {
+                alert(text + '는 이미 추가되어 있습니다.');
+            }
+        }
+
+        // 항목 삭제
+        function delItem(e) {
+            e.preventDefault();
+            const buttonId = e.target.id;
+            const index = parseInt(buttonId.split("-")[1]);
+
+            if (index > -1) {
+                items.splice(index, 1);
+                localStorage.setItem("items", JSON.stringify(items));
+                populateList(items, itemsList);
+            }
+        }
+
+        // 목록 출력
+        function populateList(plates = [], platesList) {
+            itemsList.innerHTML = items.map((item, i) => {
+                return `
+            <li>
+                <input type="checkbox" id="item${i}" data-index="${i}" ${item.done ? 'checked' : ''}/>							
+                <label for="item${i}" class="${item.done ? 'todo-done' : ''}">${item.text}</label>
+                <button type="button" id="${'delItem-' + i}" class="delItem">X</button>
+            </li>
+            `
+            }).join('');
+            addEventListenersToDelButtons();
+        }
+
+        // 체크박스 토글
+        function toggleDown(e) {
+            if (!e.target.matches('input')) return;
+            const el = e.target;
+            const index = el.dataset.index;
+            const labelElement = el.parentElement.querySelector('label');
+
+            items[index].done = !items[index].done;
+            localStorage.setItem("items", JSON.stringify(items));
+
+            if (items[index].done) {
+                labelElement.classList.add('todo-done');
+            } else {
+                labelElement.classList.remove('todo-done');
+            }
+        }
+
+        // 삭제 버튼에 이벤트 리스너 추가
+        function addEventListenersToDelButtons() {
+            const deleteButtons = document.querySelectorAll(".delItem");
+            deleteButtons.forEach((button) => {
+                button.addEventListener("click", delItem);
+            });
+        }
+
+        // 초기 출력
+        populateList(items, itemsList);
+
+        // 이벤트 리스너 등록
+        itemsList.addEventListener('click', toggleDown);
+        addItems.addEventListener('submit', addItem);
+
+    </script>
+</body>
+
+</html>
